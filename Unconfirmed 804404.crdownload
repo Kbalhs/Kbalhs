@@ -1,0 +1,38 @@
+import pymongo
+import json
+import os
+
+# Connect to MongoDB
+client = pymongo.MongoClient("mongodb://localhost:27017")
+db = client["almayadeen"]
+collection = db["articles"]
+
+# Directory containing JSON files
+json_directory = r'C:\Users\youss\OneDrive\Área de Trabalho\dgPad2024-data-science-2\Articles'
+
+# Iterate through each file in the directory
+for root, dirs, files in os.walk(json_directory):
+    for file_name in files:
+        full_path = os.path.join(root, file_name)
+        print(f"Processing file: {full_path}")
+        try:
+            with open(full_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                # Ensure the data is a list of documents
+                if isinstance(data, list):
+                    collection.insert_many(data)
+                    print(f"Inserted {len(data)} documents from {full_path}.")
+                else:
+                    print(f"Data in {full_path} is not in the expected format (list of documents).")
+        except FileNotFoundError:
+            print(f"File {full_path} not found.")
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from file {full_path}.")
+        except Exception as e:
+            print(f"An error occurred while processing {full_path}: {e}")
+
+# Verify the insertion
+count = collection.count_documents({})
+print(f"Total documents in 'articles' collection: {count}")
+
+print("Data inserted successfully!")
